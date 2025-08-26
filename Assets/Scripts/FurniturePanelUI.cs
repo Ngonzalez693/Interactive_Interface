@@ -8,11 +8,12 @@ public enum FurnitureType { Silla = 0, Sofa = 1, Mesa = 2 }
 [System.Serializable]
 public class FurnitureData
 {
-    public string nombre;
-    public Sprite imagen;
-    public int numBaldosas;
+    public string name;
+    public Sprite image;
+    public int numTiles;
     public GameObject prefab;
-    public FurnitureType tipo;
+    public FurnitureType type;
+    public Vector3 rotation = Vector3.zero;
 }
 
 public class FurniturePanelUI : MonoBehaviour
@@ -25,53 +26,74 @@ public class FurniturePanelUI : MonoBehaviour
     public TMP_Text tileCountText;
     public TMP_Text furnitureNameText;
     public Button placeButton;
+    public TMP_Text rotationText;
 
-    private FurnitureData muebleActual;
+    private FurnitureData actualFurniture;
     private int baldosasSeleccionadas = 1;
 
-    public void MostrarMueblesPorTipoInt(int tipoInt)
+    void Start()
     {
-        Debug.Log("Botón de categoría presionado, tipo: " + tipoInt);
-        FurnitureType tipo = (FurnitureType)tipoInt;
-        MostrarMueblesPorTipo(tipo);
+        placeButton.onClick.AddListener(OnPlaceButtonClicked);
+    }
+    public void ShowFurnitureByTypeInt(int typeInt)
+    {
+        FurnitureType type = (FurnitureType)typeInt;
+        ShowFurnitureByType(type);
     }
 
-    public void MostrarMueblesPorTipo(FurnitureType tipo)
+    public void ShowFurnitureByType(FurnitureType type)
     {
-        var mueblesFiltrados = muebles.Where(m => m.tipo == tipo).ToArray();
-        if (mueblesFiltrados.Length > 0)
+        var FilteredFurniture = muebles.Where(m => m.type == type).ToArray();
+        if (FilteredFurniture.Length > 0)
         {
-            MostrarMueble(mueblesFiltrados[0]);
+            ShowFurniture(FilteredFurniture[0]);
         }
         else
         {
-            Debug.LogWarning("No hay muebles del tipo: " + tipo);
+            Debug.LogWarning("No hay muebles del tipo: " + type);
         }
     }
 
-    public void MostrarMueble(FurnitureData data)
+    public void ShowFurniture(FurnitureData data)
     {
-        muebleActual = data;
-        furnitureImage.sprite = data.imagen;
-        tileCountText.text = $"{data.numBaldosas}";
-        furnitureNameText.text = data.nombre;
-        ValidarSeleccion();
+        actualFurniture = data;
+        furnitureImage.sprite = data.image;
+        tileCountText.text = $"{data.numTiles}";
+        furnitureNameText.text = data.name;
+        ValidateSelection();
+
+        Tile_Manager.Instance.SetFurnitureSelected(data);
     }
 
     public void SetBaldosasSeleccionadas(int count)
     {
         baldosasSeleccionadas = count;
-        ValidarSeleccion();
+        ValidateSelection();
     }
 
-    private void ValidarSeleccion()
+    public void ValidateSelection()
     {
         int seleccionados = Tile_Manager.Instance.GetSelectedTiles().Count;
-        placeButton.interactable = (muebleActual != null && seleccionados == muebleActual.numBaldosas);
+        placeButton.interactable = (actualFurniture != null && seleccionados == actualFurniture.numTiles);
+
+        // Mostrar rotación actual
+        if (rotationText != null)
+        {
+            rotationText.text = $"Rotación: {Tile_Manager.Instance.currentRotationY}° (Presiona R)";
+        }
     }
 
-    public void ColocarMueble()
+    private void OnPlaceButtonClicked()
     {
-        // Aquí va la lógica de instanciar el prefab del mueble en las baldosas seleccionadas
+        Tile_Manager.Instance.PlaceFurniture();
     }
+
+    public void RefreshRotationText()
+    {
+        if (rotationText != null)
+        {
+            rotationText.text = $"Rotación: {Tile_Manager.Instance.currentRotationY}° (Presiona R)";
+        }
+    }
+
 }

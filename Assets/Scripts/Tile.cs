@@ -33,7 +33,6 @@ public class Tile : MonoBehaviour
         }
     }
 
-
     public void SelectTile()
     {
         rend.material.color = selectedColor;
